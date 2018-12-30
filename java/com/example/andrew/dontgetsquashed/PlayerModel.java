@@ -10,14 +10,13 @@ public class PlayerModel implements GameObject {
     private float[] angleInfo = {0.0f,0.0f,0.0f,0.0f};
     public float[] m_modelPos = {0.0f,0.0f};
     private float angle;
-    public float springConstant = 50000f;
+    public float springConstant = 40000f;
     private SquashedPhysics m_modelPhysics;         // For player model "Animation".
     public float[] mPosTemp = {0.0f,0.0f};
 
     public PlayerModel(){
-
-        m_modelPhysics = new SquashedPhysics(this, false, true, 5000000.0f);
-        m_modelPhysics.setMaxVelocity(.00075f);
+        m_modelPhysics = new SquashedPhysics(this, false, true, 600000.0f);
+        m_modelPhysics.setMaxVelocity(.00065f);
     }
 
     @Override
@@ -69,8 +68,13 @@ public class PlayerModel implements GameObject {
         m_modelPos[1] += deltaPos[1];
     }
 
+    public void collide(float angle, SquashedPhysics physics){
+        m_modelPhysics.m_netAcceleration[0] += Math.sin(Math.toRadians(angle))+Math.sin(Math.toRadians(angle))*(Math.pow(physics.m_velocity[0],2.0)*5);
+        m_modelPhysics.m_netAcceleration[1] += Math.cos(Math.toRadians(angle))+Math.cos(Math.toRadians(angle))*(Math.pow(physics.m_velocity[1],2.0)*5);
+    }
+
     @Override
-    public void draw(float[] mvpMatrix) {
+    public void draw() {
 
     }
 

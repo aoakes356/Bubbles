@@ -1,6 +1,5 @@
 package com.example.andrew.dontgetsquashed;
 
-import android.content.res.AssetManager;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
@@ -9,24 +8,16 @@ import android.view.MotionEvent;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
-/**
- * Created by andrew on 30/06/18.
- */
-
-public class SquashedPlayer implements GameObject{
+public class Electron implements GameObject {
 
     private float DEPTH = 0.0f;
     private float maxVelocity = .1f;
     private float tx,ty,fx,fy,tdist;
     private static final float[] COLOR = {1.0f,0.0f,0.0f,1.0f};
     private static final float[] SCREEN = {(float)MainActivity.width,(float)MainActivity.height};
-    private float[] mvpMatrix;
     private int m_MVPMatrix;
-
+    private final float[] mvpMatrix;
     private Square m_square;
     private SquashedShader m_shader;
     private SquashedPhysics m_playerPhysics;        // For center of mass movement;
@@ -35,16 +26,16 @@ public class SquashedPlayer implements GameObject{
     public float[] m_pos = {0.0f,0.0f};
     private PlayerModel m_PlayerModel;
 
-    public SquashedPlayer(){
+    public Electron(){
         m_square = new Square();
         String vertexShaderCode = "", fragmentShaderCode = "";
         // GLSL programs.
         try {
             //fragmentShaderCode = new String(Files.readAllBytes(Paths.get("fragmentShader.glsl")), StandardCharsets.UTF_8);
 
-            java.util.Scanner s = new java.util.Scanner(MainActivity.assets.open("fragmentShader.glsl")).useDelimiter("\\A");
+            java.util.Scanner s = new java.util.Scanner(MainActivity.assets.open("electronFragment.glsl")).useDelimiter("\\A");
             fragmentShaderCode = s.hasNext() ? s.next() : "";
-            java.util.Scanner sc = new java.util.Scanner(MainActivity.assets.open("vertexShader.glsl")).useDelimiter("\\A");
+            java.util.Scanner sc = new java.util.Scanner(MainActivity.assets.open("electronVertex.glsl")).useDelimiter("\\A");
             vertexShaderCode = sc.hasNext() ? sc.next() : "";
             Log.d("FILE","File turned into string, success.");
         }catch (IOException e){
@@ -64,10 +55,6 @@ public class SquashedPlayer implements GameObject{
         m_playerPhysics = new SquashedPhysics(this,false, true,70000);    // setup the physics on the game object.
         m_playerPhysics.setMaxVelocity(maxVelocity);
         m_PlayerModel = new PlayerModel();
-    }
-    public SquashedPlayer(float[] matrix){
-        this();
-        mvpMatrix = matrix;
     }
 
     @Override
@@ -103,11 +90,38 @@ public class SquashedPlayer implements GameObject{
 
     }
 
+
+    public void tapForce(float x, float y, float magnitude){ // Calculates the magnitude and direction of the force exerted by each tap.
+        //Log.d("POSITION","x: "+Float.toString(m_pos[0])+" y: "+Float.toString(m_pos[1]));
+        tx =(m_pos[0]-x);
+        ty =(m_pos[1]-y);
+        Log.d("Tap Distance", Float.toString(tx)+","+Float.toString(ty));
+        float squared = tx*tx+ty*ty;
+        tdist = SquashedPhysics.invSqrt(squared);
+        fx = magnitude*tx*tdist;
+        fy = magnitude*ty*tdist;
+        m_playerPhysics.addAcceleration(fx,fy);
+        m_PlayerModel.getModelPhysics().addAcceleration(fx/100,fy/100);
+        //  Log.d("ACCEL", "Accelerating, wew "+Float.toString(ax)+" x:y "+Float.toString(ay)+" dist "+Float.toString(distance) + " dir "+Float.toString(direction[0])+","+Float.toString(direction[1]));
+
+    }
+
+    @Override
+    public void onTouch(MotionEvent e) {
+        float[] coords = {-(e.getX()/MainActivity.width-.5f),-2*((e.getY()/MainActivity.height)-.5f),0.0f,0.0f};// Adjust the x and y coordinates so they are on the same scale as the MVP matrix
+        // x goes from .5 to -.5, y goes from 1 to -1
+        Log.d("TAPPED","x: "+Float.toString(coords[0])+" y: "+Float.toString(coords[1]));
+        if(e.getAction() == MotionEvent.ACTION_MOVE) {
+            tapForce(coords[0], coords[1], 35);
+        }else if(e.getAction() == MotionEvent.ACTION_DOWN){
+            tapForce(coords[0], coords[1], 100);
+        }
+
+    }
+
     @Override
     public void draw() {
         Matrix.multiplyMM(mvpMatrix, 0, SquashedRenderer.m_ProjectionMatrix, 0, SquashedRenderer.m_ViewMatrix, 0);
-
-
         //-------------------------------------------------------------------------------
         //-----GLSL VARIABLES AND INITIALIZATIONS----------------------------------------
 
@@ -141,44 +155,10 @@ public class SquashedPlayer implements GameObject{
         GLES20.glUniformMatrix4fv(m_MVPMatrix,1,false,mvpMatrix,0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN,0,4);
         GLES20.glDisableVertexAttribArray(position);
-
-    }
-
-
-    public void tapForce(float x, float y, float magnitude){ // Calculates the magnitude and direction of the force exerted by each tap.
-        //Log.d("POSITION","x: "+Float.toString(m_pos[0])+" y: "+Float.toString(m_pos[1]));
-        tx =(m_pos[0]-x);
-        ty =(m_pos[1]-y);
-        Log.d("Tap Distance", Float.toString(tx)+","+Float.toString(ty));
-        float squared = tx*tx+ty*ty;
-        tdist = SquashedPhysics.invSqrt(squared);
-        fx = magnitude*tx*tdist;
-        fy = magnitude*ty*tdist;
-        m_playerPhysics.addAcceleration(fx,fy);
-        m_PlayerModel.getModelPhysics().addAcceleration(fx/100,fy/100);
-        //  Log.d("ACCEL", "Accelerating, wew "+Float.toString(ax)+" x:y "+Float.toString(ay)+" dist "+Float.toString(distance) + " dir "+Float.toString(direction[0])+","+Float.toString(direction[1]));
-
-    }
-
-    @Override
-    public void onTouch(MotionEvent e) {
-        float[] coords = {-(e.getX()/MainActivity.width-.5f),-2*((e.getY()/MainActivity.height)-.5f),0.0f,0.0f};// Adjust the x and y coordinates so they are on the same scale as the MVP matrix
-        // x goes from .5 to -.5, y goes from 1 to -1
-        Log.d("TAPPED","x: "+Float.toString(coords[0])+" y: "+Float.toString(coords[1]));
-        if(e.getAction() == MotionEvent.ACTION_MOVE) {
-            tapForce(coords[0], coords[1], 35);
-        }else if(e.getAction() == MotionEvent.ACTION_DOWN){
-            tapForce(coords[0], coords[1], 100);
-        }
-
     }
 
     @Override
     public void collide(float angle, SquashedPhysics physics) {
 
-    }
-
-    public void setMVPMatrix(float[] matrix){
-        mvpMatrix = matrix;
     }
 }

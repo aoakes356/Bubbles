@@ -15,10 +15,10 @@ void main() {
     float M_PI = 3.14159265358979;
     float result = (uAngles.z)*pow(dot(uAngles.yx,pos2),2.0)+((uAngles.w)*pow(dot(vec2(pos2.x,-pos2.y),uAngles.xy),2.0));
     float lightDist = pow(length(fragmentPosition.xy-light.xy),1.0)/(5.5*result);
-    if(result <= .06){
-        gl_FragColor = vec4(1.0, 1.0, 153.0/255.0,((pow(result*24.0,2.0))));
-        //gl_FragColor = vec4(1.0, 1.0, 1.0,i/10.0);
+
+    if(result <= .005){
+        gl_FragColor = vec4(0.0, 1.0, 1.0,100.0*((pow(result*24.0,2.0))));
     }else{
-        gl_FragColor = vec4(1.0,1.0,153.0/255.0,.000004/pow(result,4.0));
+        gl_FragColor = vec4(0.0,1.0,1.0,(.000000000001)/pow(result,4.0));
     }
 }

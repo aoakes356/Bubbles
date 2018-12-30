@@ -15,9 +15,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class SquashedRenderer implements GLSurfaceView.Renderer {
     SquashedPlayer m_player;
-    private final float[] m_ProjectionMatrix = new float[16];
-    private final float[] m_MVPMatrix = new float[16];
-    private final float[] m_ViewMatrix = new float[16];
+    Electron m_enemy;
+    public static final float[] m_ProjectionMatrix = new float[16];
+    public static final float[] m_ViewMatrix = new float[16];
 
     public SquashedRenderer(){
 
@@ -25,9 +25,9 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        GLES20.glClearColor(0.65f,.9f,1.0f,.5f);
+        GLES20.glClearColor(0.0f,.0f,.0f,.0f);
         m_player = new SquashedPlayer();
-
+        m_enemy = new Electron();
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA,GLES20.GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -43,15 +43,17 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         Matrix.setLookAtM(m_ViewMatrix,0,0,0,-3,0f,0f,0f,0f,1.0f,0.0f);
-        Matrix.multiplyMM(m_MVPMatrix, 0, m_ProjectionMatrix, 0, m_ViewMatrix, 0);
         m_player.update();
-        m_player.draw(m_MVPMatrix);
+        m_player.draw();
+        m_enemy.update();
+        m_enemy.draw();
         //Log.d("SPAM","Drawing a frame");
         // Call game object's draw stuff here.
     }
 
     public void onTouch(MotionEvent e){
         m_player.onTouch(e);
+        m_enemy.onTouch(e);
     }
 
 }

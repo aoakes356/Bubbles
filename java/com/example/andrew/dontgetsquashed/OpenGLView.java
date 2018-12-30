@@ -12,7 +12,6 @@ import android.view.View;
  */
 
 public class OpenGLView extends GLSurfaceView{
-    private SquashedPlayer m_player;
     private SquashedRenderer renderer = null;
     private SquashedThread thread;
     public OpenGLView(Context context) {

@@ -11,6 +11,7 @@ import javax.microedition.khronos.opengles.GL10;
 public interface GameObject {
 
     void update();
-    void draw(float[] mvpMatrix);
+    void draw();
     void onTouch(MotionEvent e);
+    void collide(float angle, SquashedPhysics physics);
 }

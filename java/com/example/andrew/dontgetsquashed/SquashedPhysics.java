@@ -9,14 +9,15 @@ import android.util.Log;
 public class SquashedPhysics {
 
     public static final float GRAVITY = -9.81f;
-    private float area = 1000.0f; // Tweak this to adjust drag force.
+    private float area = 1.0f; // Tweak this to adjust drag force.
     private GameObject m_matter;
     private boolean m_gravity;
     private boolean m_drag;
     private boolean m_collide;
+    public float m_collision_angle;
     private float m_maxVelocity = 100f;
-    private float[] m_netAcceleration = {0.0f, 0.0f};
-    private float[] m_velocity = {0.0f, 0.0f};
+    public float[] m_netAcceleration = {0.0f, 0.0f};
+    public float[] m_velocity = {0.00001f, 0.0f};
     private float[] m_direction = {0.0f,0.0f};
     private float[] drag;
 
@@ -47,16 +48,17 @@ public class SquashedPhysics {
         m_netAcceleration[1] += GRAVITY;
     }
     // Values for time should be in seconds.
-    public void exertForce(float time){
-        if(m_gravity){
-            addGravity();
-        }
-        if(m_drag){
+    public void exertForce(float time) {
+        if (m_drag) {
             drag = dragForce();
 //            Log.d("DRAGFORCE","FX "+Float.toString(drag[0])+" FY "+Float.toString(drag[1]));
 
             m_netAcceleration[0] += drag[0];
             m_netAcceleration[1] += drag[1];
+        }
+        if(m_collide){
+            m_netAcceleration[0] -= Math.sin(m_collision_angle)*Math.abs(m_netAcceleration[0]);
+            m_netAcceleration[1] -= Math.cos(m_collision_angle)*Math.abs(m_netAcceleration[1]);
         }
         m_velocity[0] += m_netAcceleration[0]*time/100.0;
         m_velocity[1] += m_netAcceleration[1]*time/100.0;
@@ -86,35 +88,32 @@ public class SquashedPhysics {
     public float[] dragForce(){
         float[] dragf = {0.0f,0.0f};
         if(m_velocity[0] < 0) {
-            dragf[0] = area * .2454f * m_velocity[0] * m_velocity[0];
+            //dragf[0] = area * .2454f * m_velocity[0] * m_velocity[0];
+            dragf[0] = (float)((area * .2454f * Math.sqrt(Math.abs(m_velocity[0] * m_velocity[0] * m_velocity[0])))/Math.log(2+50000*Math.abs(m_velocity[0])));
         }else{
-            dragf[0] = -area * .2454f * m_velocity[0] * m_velocity[0];
+            //dragf[0] = -area * .2454f * m_velocity[0] * m_velocity[0];
+            dragf[0] = -(float)((area * .2454f * Math.sqrt(Math.abs(m_velocity[0] * m_velocity[0] * m_velocity[0])))/Math.log(2+50000*Math.abs(m_velocity[0])));
         }
         if(m_velocity[1] < 0) {
-            dragf[1] = area * .2454f * m_velocity[1] * m_velocity[1];
+            //dragf[1] = area * .2454f * m_velocity[1] * m_velocity[1];
+            dragf[1] = (float)((area * .2454f * Math.sqrt(Math.abs(m_velocity[1] * m_velocity[1] * m_velocity[1])))/Math.log(2+50000*Math.abs(m_velocity[1])));
+
         }else{
-            dragf[1] = -area * .2454f * m_velocity[1] * m_velocity[1];
+            //dragf[1] = -area * .2454f * m_velocity[1] * m_velocity[1];
+            dragf[1] = -(float)((area * .2454f * Math.sqrt(Math.abs(m_velocity[1] * m_velocity[1] * m_velocity[1])))/Math.log(2+50000*Math.abs(m_velocity[1])));
+
         }
         return  dragf;
     }
 
     public void collide(float angle){
         if(!m_collide) {
-            if(Math.abs(m_velocity[0]) < .0001 && Math.abs(m_velocity[1]) < .0001){
+            m_collision_angle = (float)Math.toRadians(angle);
+            m_velocity[0] -= 2*Math.sin(m_collision_angle)*Math.abs(m_velocity[0]);
+            m_velocity[1] -= 2*Math.cos(m_collision_angle)*Math.abs(m_velocity[1]);
 
-            }
-            angle = (float)Math.toRadians(angle);
-            double accelAngle = Math.atan2(this.m_netAcceleration[0],m_netAcceleration[1]);
-            if(Math.abs(accelAngle - (angle + Math.PI/2)) > Math.PI/2) {
-                //if(!(accelAngle > angle && accelAngle < Math.PI + angle)) {
-                this.m_netAcceleration[0] *= Math.cos(angle);
-                this.m_netAcceleration[1] *= Math.sin(angle);
-            }
-            //}
-
-            this.m_velocity[0] = (float)(this.m_velocity[0]*(1-2*Math.sin(angle)));
-            this.m_velocity[1] = (float)(this.m_velocity[1]*(1-2*Math.cos(angle)));
             m_collide = true;
+
         }
     }
 
