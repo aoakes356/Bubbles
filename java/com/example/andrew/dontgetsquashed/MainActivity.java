@@ -1,6 +1,7 @@
 package com.example.andrew.dontgetsquashed;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ public class MainActivity extends Activity {
     public static int width;
     public static int height;
     public static AssetManager assets;
+    public static Context m_Context;
     private OpenGLView openGLView;
 
     @Override
@@ -31,6 +33,7 @@ public class MainActivity extends Activity {
         openGLView = new OpenGLView(this);
         setContentView(openGLView);
         assets = this.getAssets();
+        m_Context = this;
         //Log.d("MAIN","Set the view");
     }
 

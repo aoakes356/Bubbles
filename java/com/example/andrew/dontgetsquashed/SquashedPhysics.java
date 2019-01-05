@@ -20,12 +20,16 @@ public class SquashedPhysics {
     public float[] m_velocity = {0.00001f, 0.0f};
     private float[] m_direction = {0.0f,0.0f};
     private float[] drag;
+    public float m_mass;
+    public float m_charge;
 
     public SquashedPhysics(GameObject object, boolean gravity, boolean drag){
         m_matter = object;
         m_gravity = gravity;
         m_drag = drag;
         m_collide = false;
+        m_mass = 1;
+        m_charge = 1;
     }
     public SquashedPhysics(GameObject object, boolean gravity, boolean drag,float area){
         this(object,gravity,drag);
@@ -106,15 +110,24 @@ public class SquashedPhysics {
         return  dragf;
     }
 
-    public void collide(float angle){
-        if(!m_collide) {
-            m_collision_angle = (float)Math.toRadians(angle);
-            m_velocity[0] -= 2*Math.sin(m_collision_angle)*Math.abs(m_velocity[0]);
-            m_velocity[1] -= 2*Math.cos(m_collision_angle)*Math.abs(m_velocity[1]);
-
-            m_collide = true;
-
+    public void collide(float angle, GameObject object){
+        m_collision_angle = (float) Math.toRadians(angle);
+        if(object == null) {
+            m_velocity[0] -= 2 * Math.sin(m_collision_angle) * Math.abs(m_velocity[0]);
+            m_velocity[1] -= 2 * Math.cos(m_collision_angle) * Math.abs(m_velocity[1]);
+        }else{
+            SquashedPhysics physics = object.getPhysics();
+            physics.m_collision_angle = -m_collision_angle;
+            physics.m_collide = true;
+            float save0 = m_velocity[0];
+            float save1 = m_velocity[1];
+            m_velocity[0] = physics.m_velocity[0];
+            m_velocity[1] = physics.m_velocity[1];
+            physics.m_velocity[0] = save0;
+            physics.m_velocity[1] = save1;
+            Log.d("collide", "collided");
         }
+        m_collide = true;
     }
 
     // Quake engine inverse sqrt. wew, not amazingly accurate.

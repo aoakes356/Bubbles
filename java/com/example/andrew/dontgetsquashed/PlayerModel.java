@@ -18,6 +18,11 @@ public class PlayerModel implements GameObject {
         m_modelPhysics = new SquashedPhysics(this, false, true, 600000.0f);
         m_modelPhysics.setMaxVelocity(.00065f);
     }
+    public PlayerModel(float area, float springConstant){
+        m_modelPhysics = new SquashedPhysics(this, false, true, area);
+        m_modelPhysics.setMaxVelocity(.00065f);
+        this.springConstant = springConstant;
+    }
 
     @Override
     public void update() {
@@ -68,7 +73,8 @@ public class PlayerModel implements GameObject {
         m_modelPos[1] += deltaPos[1];
     }
 
-    public void collide(float angle, SquashedPhysics physics){
+    public void collide(float angle, GameObject object){
+        SquashedPhysics physics = object.getPhysics();
         m_modelPhysics.m_netAcceleration[0] += Math.sin(Math.toRadians(angle))+Math.sin(Math.toRadians(angle))*(Math.pow(physics.m_velocity[0],2.0)*5);
         m_modelPhysics.m_netAcceleration[1] += Math.cos(Math.toRadians(angle))+Math.cos(Math.toRadians(angle))*(Math.pow(physics.m_velocity[1],2.0)*5);
     }
@@ -80,6 +86,46 @@ public class PlayerModel implements GameObject {
 
     @Override
     public void onTouch(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean contains(GameObject object) {
+        return false;
+    }
+
+    @Override
+    public float[] getCoords() {
+        return new float[0];
+    }
+
+    @Override
+    public float getRadius() {
+        return 0;
+    }
+
+    @Override
+    public SquashedPhysics getPhysics() {
+        return m_modelPhysics;
+    }
+
+    @Override
+    public String getType() {
+        return null;
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
+    }
+
+    @Override
+    public PlayerModel getPlayerModel() {
+        return this;
+    }
+
+    @Override
+    public void setActive(boolean b) {
 
     }
 

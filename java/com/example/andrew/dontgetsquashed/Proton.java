@@ -1,22 +1,14 @@
 package com.example.andrew.dontgetsquashed;
 
-import android.opengl.GLES20;
-import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-public class Electron extends Bubble {
-
-
-    public Electron(){
-        super(.00085f,600000f,100000.0f, 80000f, new float[]{0.0f,1.0f,1.0f},10f);
-        m_playerPhysics.m_charge = 1;
+public class Proton extends Bubble {
+    public Proton(){
+        super(.00085f,600000f,100000.0f, 80000f, new float[]{1.0f,.5f,0.0f},7f);
+        m_playerPhysics.m_charge = -1;
     }
-    public Electron(float radius, float tension, float drag,float thicc, float[] color, float aura){
+    public Proton(float radius, float tension, float drag,float thicc, float[] color, float aura){
         super(radius, tension, drag, thicc, color, aura);
     }
 
@@ -53,10 +45,9 @@ public class Electron extends Bubble {
     @Override
     public void collide(float angle, GameObject object) {
         super.collide(angle,object);
-        if (object.getPhysics().m_charge == -m_playerPhysics.m_charge && object.isActive() && m_active){
+        if (object.getPhysics().m_charge == -m_playerPhysics.m_charge && object.isActive() && m_active) {
             m_active = false;
             object.setActive(false);
         }
-
     }
 }

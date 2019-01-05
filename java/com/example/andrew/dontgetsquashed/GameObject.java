@@ -13,5 +13,13 @@ public interface GameObject {
     void update();
     void draw();
     void onTouch(MotionEvent e);
-    void collide(float angle, SquashedPhysics physics);
+    void collide(float angle, GameObject object);
+    boolean contains(GameObject object);
+    float[] getCoords();
+    float getRadius();
+    SquashedPhysics getPhysics();
+    String getType();
+    boolean isActive();
+    PlayerModel getPlayerModel();
+    void setActive(boolean b);
 }
