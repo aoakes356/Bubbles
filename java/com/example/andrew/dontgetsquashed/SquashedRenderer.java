@@ -22,18 +22,22 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
     public static final float[] m_ProjectionMatrix = new float[16];
     public static final float[] m_ViewMatrix = new float[16];
     public int electrons = 0;
+    public GLDigit m_score;
     public SquashedRenderer(){
 
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        GLES20.glClearColor(0.0f,.0f,.0f,.0f);
+        GLES20.glClearColor(.0f,.0f,.0f,1.0f);
         frameCount = 0;
         m_player = new SquashedPlayer();
         m_enemy = new Electron();
         m_collisions = new CollisionManager();
         m_collisions.addObject(m_player);
+        GLText numbers = new GLText();
+        m_score = new GLDigit(numbers, new float[]{0,0});
+        m_score.setDigit(new Integer(1));
         //m_collisions.addObject(m_enemy);
         /*for(int i = 0; i < 1; i++){
             m_burbles[i] = new Electron();
@@ -98,6 +102,8 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
 
             }
         }
+        m_score.setDigit((int) m_player.m_playerPhysics.m_charge);
+        m_score.draw();
         m_collisions.collisionCheck();
         //Log.d("SPAM","Drawing a frame");
         // Call game object's draw stuff here.
