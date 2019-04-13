@@ -129,6 +129,21 @@ public class PlayerModel implements GameObject {
 
     }
 
+    @Override
+    public void setPosition(float[] pos) {
+
+    }
+
+    @Override
+    public void setCharge(int charge) {
+
+    }
+
+    @Override
+    public float[] getColor() {
+        return new float[0];
+    }
+
     public float[] getAngleInfo() {
         return angleInfo;
     }

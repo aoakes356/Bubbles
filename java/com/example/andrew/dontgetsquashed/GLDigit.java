@@ -1,6 +1,8 @@
 package com.example.andrew.dontgetsquashed;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -13,6 +15,7 @@ public class GLDigit implements GameObject {
 
     public String m_digit;
     private GLText m_settings;
+    public Bitmap m_bitMap;
     public int m_texture;
     public float[] m_pos;
     public Square m_square;
@@ -63,45 +66,57 @@ public class GLDigit implements GameObject {
 
     @Override
     public void draw() {
-        Matrix.multiplyMM(mvpMatrix, 0, SquashedRenderer.m_ProjectionMatrix, 0, SquashedRenderer.m_ViewMatrix, 0);
+        if(m_digit != "") {
+            Matrix.multiplyMM(mvpMatrix, 0, SquashedRenderer.m_ProjectionMatrix, 0, SquashedRenderer.m_ViewMatrix, 0);
+            //-------------------------------------------------------------------------------
+            //-----GLSL VARIABLES AND INITIALIZATIONS----------------------------------------
 
 
-        //-------------------------------------------------------------------------------
-        //-----GLSL VARIABLES AND INITIALIZATIONS----------------------------------------
+            //-------------------------------------------------------------------------------
+            //Log.d("ANGLEINFO","[0]"+Float.toString(angleInfo[0])+" [1]"+Float.toString(angleInfo[1])+" [2]"+Float.toString(angleInfo[2])+" [3]"+Float.toString(angleInfo[3]));
+            // Variables given to the shader.
+            int position, texCoord, texture;
 
+            GLES20.glUseProgram(m_program);
+            //Attributes
+            position = GLES20.glGetAttribLocation(m_program, "vPosition");
+            texCoord = GLES20.glGetAttribLocation(m_program, "texcoord");
+            GLES20.glEnableVertexAttribArray(position);
+            GLES20.glEnableVertexAttribArray(texCoord);
+            // GLES20.glVertextAttribPointer(openGLLocation,Components per vertext attribute, type of data, normalize?, distance between components, pointer to first element);
+            GLES20.glVertexAttribPointer(position, Square.COORDS_PER_VERTEX, GLES20.GL_FLOAT, true, 4 * Square.COORDS_PER_VERTEX, m_square.m_vertexBuffer);
+            GLES20.glVertexAttribPointer(texCoord, 2, GLES20.GL_FLOAT, true, 8, m_square.m_textureBuffer);
 
-        //-------------------------------------------------------------------------------
-        //Log.d("ANGLEINFO","[0]"+Float.toString(angleInfo[0])+" [1]"+Float.toString(angleInfo[1])+" [2]"+Float.toString(angleInfo[2])+" [3]"+Float.toString(angleInfo[3]));
-        // Variables given to the shader.
-        int position, texCoord, texture;
+            //Uniforms
+            //color = GLES20.glGetUniformLocation(m_program,"vColor");
+            texture = GLES20.glGetUniformLocation(m_program, "texture");
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE);
 
-        GLES20.glUseProgram(m_program);
-        //Attributes
-        position = GLES20.glGetAttribLocation(m_program, "vPosition");
-        texCoord = GLES20.glGetAttribLocation(m_program,"texcoord");
-        GLES20.glEnableVertexAttribArray(position);
-        GLES20.glEnableVertexAttribArray(texCoord);
-        // GLES20.glVertextAttribPointer(openGLLocation,Components per vertext attribute, type of data, normalize?, distance between components, pointer to first element);
-        GLES20.glVertexAttribPointer(position,Square.COORDS_PER_VERTEX,GLES20.GL_FLOAT,true,4*Square.COORDS_PER_VERTEX,m_square.m_vertexBuffer);
-        GLES20.glVertexAttribPointer(texCoord,2,GLES20.GL_FLOAT,true,8,m_square.m_textureBuffer);
+            // Bind the texture to this unit.
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture);
+            m_bitMap = m_settings.generateTexture(m_digit,32);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, m_settings.m_textures[0]);
 
-        //Uniforms
-        //color = GLES20.glGetUniformLocation(m_program,"vColor");
-        texture = GLES20.glGetUniformLocation(m_program,"texture");
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE);
+//Create Nearest Filtered Texture
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
-        // Bind the texture to this unit.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture);
+//Different possible texture parameters, e.g. GLES20.GL_CLAMP_TO_EDGE
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, m_bitMap, 0);
+            // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
 
-        // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
-        GLES20.glUniform1i(texture, Integer.parseInt(m_digit));
-        m_MVPMatrix = GLES20.glGetUniformLocation(m_program,"uMVPMatrix");
-        //Log.d("ANGLE", "sin: "+angleInfo[0]+ " cos: "+angleInfo[1]);
-        Matrix.translateM(mvpMatrix,0,m_pos[0],m_pos[1],DEPTH);
-        GLES20.glUniformMatrix4fv(m_MVPMatrix,1,false,mvpMatrix,0);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN,0,4);
-        GLES20.glDisableVertexAttribArray(position);
-        GLES20.glDisableVertexAttribArray(texCoord);
+            GLES20.glUniform1i(texture, 0);
+            m_MVPMatrix = GLES20.glGetUniformLocation(m_program, "uMVPMatrix");
+            //Log.d("ANGLE", "sin: "+angleInfo[0]+ " cos: "+angleInfo[1]);
+            Matrix.translateM(mvpMatrix, 0, m_pos[0], m_pos[1], DEPTH);
+            GLES20.glUniformMatrix4fv(m_MVPMatrix, 1, false, mvpMatrix, 0);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
+            GLES20.glDisableVertexAttribArray(position);
+            GLES20.glDisableVertexAttribArray(texCoord);
+        }
     }
 
     @Override
@@ -154,7 +169,27 @@ public class GLDigit implements GameObject {
 
     }
 
+    @Override
+    public void setPosition(float[] pos) {
+        m_pos = pos;
+    }
+
+    @Override
+    public void setCharge(int charge) {
+
+    }
+
+    @Override
+    public float[] getColor() {
+        return new float[0];
+    }
+
     public void setDigit(Integer digit){
-        m_digit = digit.toString();
+        if(digit == null){
+            m_digit = "";
+        }else {
+            m_digit = digit.toString();
+            m_bitMap = m_settings.generateTexture(m_digit,32);
+        }
     }
 }

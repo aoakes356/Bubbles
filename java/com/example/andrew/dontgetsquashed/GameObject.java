@@ -22,4 +22,7 @@ public interface GameObject {
     boolean isActive();
     PlayerModel getPlayerModel();
     void setActive(boolean b);
+    void setPosition(float[] pos);
+    void setCharge(int charge);
+    float[] getColor();
 }

@@ -21,7 +21,7 @@ public class SquashedPhysics {
     private float[] m_direction = {0.0f,0.0f};
     private float[] drag;
     public float m_mass;
-    public float m_charge;
+    public int m_charge;
 
     public SquashedPhysics(GameObject object, boolean gravity, boolean drag){
         m_matter = object;

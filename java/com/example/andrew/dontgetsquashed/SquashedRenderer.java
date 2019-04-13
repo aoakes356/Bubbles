@@ -16,6 +16,11 @@ import javax.microedition.khronos.opengles.GL10;
 public class SquashedRenderer implements GLSurfaceView.Renderer {
     public CollisionManager m_collisions;
     private int frameCount;
+    private long m_startTime;
+    private int m_maxSpawned = 50;
+    public int m_spawnedCount = 0;
+    private float m_spawnRate = 45;
+    private float m_minSpawnRate = 10;
     public SquashedPlayer m_player;
     public Electron m_enemy;
     public Bubble [] m_burbles = new Bubble[20];
@@ -30,14 +35,15 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         GLES20.glClearColor(.0f,.0f,.0f,1.0f);
+        m_startTime = System.currentTimeMillis();
         frameCount = 0;
         m_player = new SquashedPlayer();
         m_enemy = new Electron();
-        m_collisions = new CollisionManager();
+        m_collisions = new CollisionManager(this);
         m_collisions.addObject(m_player);
         GLText numbers = new GLText();
-        m_score = new GLDigit(numbers, new float[]{0,0});
-        m_score.setDigit(new Integer(1));
+        m_score = new GLDigit(numbers,new float[]{.1f,.75f});
+        m_score.setDigit(1);
         //m_collisions.addObject(m_enemy);
         /*for(int i = 0; i < 1; i++){
             m_burbles[i] = new Electron();
@@ -72,8 +78,11 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
         //m_enemy.draw();
         frameCount++;
         synchronized (m_collisions.objects) {
-
-            if (frameCount >= 60) {
+            if (frameCount >= m_spawnRate && (m_spawnedCount < m_maxSpawned)) {
+                m_spawnedCount++;
+                if(m_spawnRate > m_minSpawnRate) {
+                    m_spawnRate = m_spawnRate * .99999f;
+                }
                 frameCount = 0;
                 Bubble e;
                 if (Math.random() > .3+(electrons/5.0)) {
@@ -89,20 +98,23 @@ public class SquashedRenderer implements GLSurfaceView.Renderer {
                 float dy = m_player.m_pos[1]-e.m_pos[1];
                 float dist = (float) Math.sqrt(dx*dx+dy*dy);
                 Log.d("Spawned","Distance from spawn: "+dist);
-                if(dist < .1){
-                    e.m_pos[0] -= (dx/dist)*.1;
-                    e.m_pos[1] -= (dy/dist)*.1;
+                if(dist < .3){
+                    e.m_pos[0] -= (dx/dist)*.3;
+                    e.m_pos[1] -= (dy/dist)*.3;
                 }
                 m_collisions.addObject(e);
             }
-
+            float[] pos;
             for (GameObject a : m_collisions.objects) {
+                pos = a.getCoords();
+                a.setPosition(new float[]{pos[0]-m_player.m_pos[0],pos[1]-m_player.m_pos[1]});
                 a.update();
                 a.draw();
-
             }
         }
-        m_score.setDigit((int) m_player.m_playerPhysics.m_charge);
+        //m_score.setDigit(((int)m_player.m_playerPhysics.m_charge));
+
+        //m_score.update();
         m_score.draw();
         m_collisions.collisionCheck();
         //Log.d("SPAM","Drawing a frame");

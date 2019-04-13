@@ -20,19 +20,22 @@ import java.nio.file.Paths;
 public class SquashedPlayer extends Bubble{
 
 
+    private boolean m_down;
+    private float[] m_tapCoords;
 
     public SquashedPlayer(){
-        super(.002f,600000f,80000.0f, 40000f, new float[]{0.0f,1.0f,0.0f},1f);
+        super(.002f,9000000f,8000.0f, 150000f, new float[]{0.0f,1.0f,0.0f},1f);
         m_playerPhysics.m_charge = 1;
     }
 
     @Override
     public void update() {
         //super.m_playerPhysics.addGravity();
+        if(m_down){
+            tapForce(m_tapCoords[0],m_tapCoords[1], 45);
+        }
         super.update();
-        m_color[0] = m_playerPhysics.m_charge/20;
-        m_aura = (float) Math.sqrt(m_playerPhysics.m_charge);
-        m_radius = (float) (.002*m_aura);
+
     }
 
     @Override
@@ -53,9 +56,13 @@ public class SquashedPlayer extends Bubble{
         // x goes from .5 to -.5, y goes from 1 to -1
         Log.d("TAPPED","x: "+Float.toString(coords[0])+" y: "+Float.toString(coords[1]));
         if(e.getAction() == MotionEvent.ACTION_MOVE) {
-            tapForce(coords[0], coords[1], 35);
+            tapForce(coords[0], coords[1], 10);
         }else if(e.getAction() == MotionEvent.ACTION_DOWN){
-            tapForce(coords[0], coords[1], 100);
+            m_down = true;
+            m_tapCoords = coords;
+            //tapForce(coords[0], coords[1], 100);
+        }else if(e.getAction() == MotionEvent.ACTION_UP){
+            m_down = false;
         }
 
     }
@@ -67,6 +74,14 @@ public class SquashedPlayer extends Bubble{
         if(m_playerPhysics.m_charge <= 0){
             m_active = false;
         }
+        m_color[0] = ((float)m_playerPhysics.m_charge)/20.0f;
+        m_aura = (float) Math.sqrt(m_playerPhysics.m_charge);
+        m_radius = (float) (.002*m_aura);
+    }
+
+    @Override
+    public String getType(){
+        return "Player";
     }
 
 }

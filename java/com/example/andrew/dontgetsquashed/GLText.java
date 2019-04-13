@@ -13,12 +13,17 @@ import android.opengl.GLUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 
-public class GLText{
+import java.util.HashMap;
+import java.util.Map;
 
+public class GLText {
+    public Map<String, Bitmap> m_cache;
     public int[] m_textures;
 
-    public GLText(){
+    public GLText() {
         m_textures = new int[10];
+        m_cache = new HashMap<>();
+
         Bitmap bitmap = null;
         Canvas canvas;
 
@@ -28,16 +33,11 @@ public class GLText{
         textPaint.setARGB(0xff, 0xff, 0xff, 0xff);
         GLES20.glGenTextures(10, m_textures, 0);
 
-        for(int i = 0; i < 10; i++) {
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0+i);
-            bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_4444);
-            canvas = new Canvas(bitmap);
-            bitmap.eraseColor(0);
-            Drawable background = MainActivity.m_Context.getResources().getDrawable(R.drawable.w_bg);
-            background.setBounds(0, 0, 256, 256);
-            background.draw(canvas);
-            canvas.drawText(i+"", 16, 112, textPaint);
+        for (int i = 0; i < 10; i++) {
+            bitmap = generateTexture(""+i,32);
 //...and bind it to our array
+            /*
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, m_textures[i]);
 
 //Create Nearest Filtered Texture
@@ -47,15 +47,35 @@ public class GLText{
 //Different possible texture parameters, e.g. GLES20.GL_CLAMP_TO_EDGE
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
-            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);*/
 
-            if (m_textures[i] == 0)
-            {
-                Log.d("Error","ERROORR AAHHH");
-                throw new RuntimeException("Error loading texture."+i);
+            if (m_textures[i] == 0) {
+                Log.d("Error", "ERROORR AAHHH");
+                throw new RuntimeException("Error loading texture." + i);
             }
         }
-        bitmap.recycle();
     }
 
+    public Bitmap generateTexture(String text, int fontSize) {
+
+        int[] tempTextures = new int[1];
+        Bitmap bitmap = null;
+        Canvas canvas;
+        if(m_cache.containsKey(text)){
+            bitmap = m_cache.get(text);
+        }else {
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(fontSize);
+            textPaint.setAntiAlias(true);
+            textPaint.setARGB(0xff, 0xff, 0xff, 0xff);
+            bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_4444);
+            canvas = new Canvas(bitmap);
+            bitmap.eraseColor(0);
+            Drawable background = MainActivity.m_Context.getResources().getDrawable(R.drawable.w_bg);
+            background.setBounds(0, 0, 256, 256);
+            background.draw(canvas);
+            canvas.drawText(text, 16, 112, textPaint);
+        }
+        return bitmap;
+    }
 }

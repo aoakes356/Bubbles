@@ -30,12 +30,12 @@ public class Bubble implements GameObject {
     public float[] m_color;
     public float m_aura;
     public boolean m_active;
+    //public GLDigit m_score;
     public Bubble(){
-        this(.06f,600000f,70000f, 40000f, new float[]{1.0f,1.0f,153.0f/255.0f},1f);
+        this(.06f,600000f,0f, 40000f, new float[]{1.0f,1.0f,153.0f/255.0f},1f);
     }
 
     public Bubble(float radius, float tension, float drag,float thicc, float[] color, float aura){
-
         m_drag = drag;
         m_radius = radius;
         m_tension = tension;
@@ -69,6 +69,9 @@ public class Bubble implements GameObject {
         GLES20.glAttachShader(m_program, m_shader.getVert());
         GLES20.glAttachShader(m_program,m_shader.getFrag());
         GLES20.glLinkProgram(m_program);
+        GLText numbers = new GLText();
+        //m_score = new GLDigit(numbers,new float[]{.1f,.75f});
+        //m_score.setDigit(1);
         m_playerPhysics = new SquashedPhysics(this,false, true,m_drag);    // setup the physics on the game object.
         m_playerPhysics.setMaxVelocity(maxVelocity);
         m_PlayerModel = new PlayerModel(m_drag,m_thicc);
@@ -76,26 +79,14 @@ public class Bubble implements GameObject {
 
     @Override
     public void update() {
-        if(m_pos[0] < -.45 ) {
-            m_PlayerModel.collide(-90,this);
-            m_playerPhysics.collide(-90,null);
-        }else if(m_pos[0] > .45 ) {
-            m_PlayerModel.collide(90,this);
-            m_playerPhysics.collide(90,null);
-        }
-        if (m_pos[1] > .9){
-            m_PlayerModel.collide(0,this);
-            m_playerPhysics.collide(0,null);
-        }
-        if (m_pos[1] < -.9){
-            m_PlayerModel.collide(180,this);
-            m_playerPhysics.collide(180,null);
-        }
         m_PlayerModel.update();
         m_playerPhysics.exertForce(.033f);
         deltaPos = m_playerPhysics.deltaPos(.033f);
         m_pos[0] += deltaPos[0]*100;
         m_pos[1] += deltaPos[1]*100;
+        /*m_score.setDigit(m_playerPhysics.m_charge);
+        m_score.setPosition(m_pos);
+        m_score.update();*/
     }
 
     @Override
@@ -110,6 +101,7 @@ public class Bubble implements GameObject {
         //-------------------------------------------------------------------------------
         //Log.d("ANGLEINFO","[0]"+Float.toString(angleInfo[0])+" [1]"+Float.toString(angleInfo[1])+" [2]"+Float.toString(angleInfo[2])+" [3]"+Float.toString(angleInfo[3]));
         // Variables given to the shader.
+        //m_score.draw();
         int position, color, screen, texCoord, aInfo, settings;
         float[] sett = {m_radius,m_aura};
 
@@ -153,8 +145,8 @@ public class Bubble implements GameObject {
             squared = .01f;
         }
         tdist = SquashedPhysics.invSqrt(squared);
-        fx = 2*tx*tdist*tdist*m_playerPhysics.m_charge;
-        fy = 2*ty*tdist*tdist*m_playerPhysics.m_charge;
+        fx = 10*tx*tdist*m_playerPhysics.m_charge;
+        fy = 10*ty*tdist*m_playerPhysics.m_charge;
         m_playerPhysics.addAcceleration(fx,fy);
         m_PlayerModel.getModelPhysics().addAcceleration(fx/100,fy/100);
         //  Log.d("ACCEL", "Accelerating, wew "+Float.toString(ax)+" x:y "+Float.toString(ay)+" dist "+Float.toString(distance) + " dir "+Float.toString(direction[0])+","+Float.toString(direction[1]));
@@ -223,6 +215,22 @@ public class Bubble implements GameObject {
     @Override
     public void setActive(boolean b) {
         m_active = b;
+    }
+
+    @Override
+    public void setPosition(float[] pos) {
+        m_pos[0] = pos[0];
+        m_pos[1] = pos[1];
+    }
+
+    @Override
+    public void setCharge(int charge) {
+        m_playerPhysics.m_charge = charge;
+    }
+
+    @Override
+    public float[] getColor() {
+        return m_color;
     }
 
 }
